@@ -1,0 +1,939 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasal Polsip IDP</title>
+    <!-- Tambahkan link CSS DataTables di sini -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <style>
+        /* CSS untuk loading screen */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        #loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            position: absolute; /* Tambahkan posisi absolut */
+            top: calc(50% - 50px); /* Atur posisi vertikal ke tengah */
+            left: calc(50% - 25px); /* Atur posisi horizontal ke tengah */
+        }
+
+        #loading-text {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-top: 70px; /* Atur margin top untuk membuat ruang di bawah animasi */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* CSS untuk konten utama */
+        #container {
+            width: 80%;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            padding: 20px;
+            display: none; /* Konten utama disembunyikan secara awal */
+            margin-top: 20px; /* Tambahkan margin top di sini */
+        }
+        /* CSS lainnya */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #BBAEA5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        /* CSS lainnya */
+        #container {
+            width: 80%;
+            background-color: #fff;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            padding: 20px;
+            display: flex;
+        }
+        /* CSS lainnya */
+        #table-container {
+            flex: 2;
+            margin-right: 20px;
+        }
+        /* CSS lainnya */
+        #result-container {
+            flex: 1;
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        /* CSS lainnya */
+        #header {
+            background-color: #20CE65;
+            color: #fff;
+            padding: 20px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        /* CSS lainnya */
+        #header h1 {
+            margin: 0;
+        }
+        /* CSS lainnya */
+        .center {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* CSS lainnya */
+        table.dataTable thead th, table.dataTable tbody td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        /* CSS lainnya */
+        table.dataTable thead th {
+            background-color: #f2f2f2;
+        }
+        /* CSS lainnya */
+        table.dataTable tbody tr.selected {
+            background-color: #ffffcc !important;
+        }
+        /* CSS lainnya */
+        /* Tambahkan warna sesuai tipe pada kolom Type */
+        td[data-type='1'] {
+            background-color: #d3d3d3; /* Ringan - Kuning muda */
+        }
+        /* CSS lainnya */
+        td[data-type='2'] {
+            background-color: #f7771d; /* Sedang - Orange */
+        }
+        /* CSS lainnya */
+        td[data-type='3'] {
+            background-color: #ffcccc; /* Berat - Merah muda */
+        }
+        /* CSS lainnya */
+        #selectedRow {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* CSS lainnya */
+        #clearButton, #copyButton {
+            margin-top: 10px;
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        /* CSS lainnya */
+        #clearButton:hover, #copyButton:hover {
+            background-color: #45a049;
+        }
+        /* CSS lainnya */
+        #result-details {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        /* CSS lainnya */
+        #result-details p {
+            margin: 5px 0;
+        }
+
+        
+        .checkbox-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.checkbox-label img {
+    width: 20px; /* Sesuaikan ukuran gambar checkbox */
+    margin-right: 10px;
+}
+
+/* Sembunyikan checkbox asli */
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+/* Tampilan checkbox saat terceklik */
+.checkbox-label input[type="checkbox"]:checked + img {
+    filter: invert(52%) sepia(61%) saturate(2985%) hue-rotate(86deg) brightness(97%) contrast(90%);
+}
+
+#myBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  font-size: 18px;
+  border: none;
+  outline: none;
+  background-color: gray;
+  color: white;
+  cursor: pointer;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+#myBtn:hover {
+  background-color: greenyellow;
+}
+
+/* CSS untuk membuat tabel lebih kecil */
+table.dataTable {
+    font-size: 12px; /* Atur ukuran font */
+    width: auto; /* Atur lebar tabel menjadi auto */
+}
+
+table.dataTable thead th,
+table.dataTable tbody td {
+    padding: 6px 8px; /* Atur padding */
+}
+
+/* Hapus border di antara kolom */
+table.dataTable thead th:not(:last-child),
+table.dataTable tbody td:not(:last-child) {
+    border-right: none;
+}
+
+/* Hapus border di antara baris */
+table.dataTable tbody tr:not(:last-child) {
+    border-bottom: none;
+}
+
+#example_wrapper .dataTables_scrollBody {
+    max-height: 300px; /* Atur tinggi maksimum area scroll tabel */
+    overflow-y: auto; /* Aktifkan scroll jika konten melebihi area */
+}
+
+/* CSS untuk mengubah kursor menjadi gambar tangan saat dihover */
+#example tbody tr:hover {
+    cursor: pointer;
+}
+
+/* CSS untuk animasi blipping */
+@keyframes blip {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* CSS untuk menerapkan animasi blipping */
+#example tbody tr.selected {
+    animation: blip 0.5s;
+}
+
+#navigation {
+    display: block;
+    justify-content: center; /* Memposisikan navigasi di tengah horizontal */
+    position: fixed; /* Membuat navigasi tetap di layar */
+    top: 20px; /* Posisikan navigasi di bagian atas */
+    width: 100%; /* Lebar navigasi menyesuaikan lebar layar */
+    padding: 20px;
+    background-color: #20CE65;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    margin-bottom: 20px;
+    z-index: 999; /* Pastikan navigasi muncul di atas konten lain */
+}
+
+.nav-button {
+    text-decoration: none;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-button:hover {
+    background-color: #45a049;
+}
+
+    </style>
+</head>
+<body>
+<!-- Tambahkan overlay loading -->
+<div id="loading-overlay">
+    <div id="loading-spinner"></div> 
+    <div id="loading-text" style="font-size:18px">Loading...<br>Made by Alexander Lukashenko
+        <br/>
+        <img src="https://cdn.discordapp.com/attachments/1211682288325099550/1214526548015841290/image.png?ex=65f96efd&is=65e6f9fd&hm=b343fe286585d0ccdf1fff83b4d77e977068d88c261f8a10dd4fe31bf7201d07&" width="200px"/>
+    </div>
+</div>
+
+<div id="container">
+    <div id="table-container">
+        <div id="header">
+            <!-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/HackerRank_logo.png/800px-HackerRank_logo.png" width="90"/> -->
+            <h1>POLSIP & POLMAS PROCESSING SUSPECT</h1>
+        </div>
+
+        <div id="example_wrapper" class="dataTables_wrapper dt-bootstrap4">
+            <table id="example" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Pasal</th>
+                        <th>Nama</th>
+                        <th>Jail</th>
+                        <th>Denda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <!-- Pastikan $pasalData telah didefinisikan sebelumnya -->
+                                    <tr data-id="1" data-name="Tidak Membawa Kartu Identitas" data-type="1" data-denda="15000" data-jail="5">
+                        <td>1</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.1</td>
+                        <td>Tidak Membawa Kartu Identitas</td>
+                        <td>5</td>
+                        <td>15000</td>
+                    </tr>
+                                    <tr data-id="2" data-name="Penganiayaan / Melukai Warga" data-type="1" data-denda="5000" data-jail="5">
+                        <td>2</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.2</td>
+                        <td>Penganiayaan / Melukai Warga</td>
+                        <td>5</td>
+                        <td>5000</td>
+                    </tr>
+                                    <tr data-id="3" data-name="Penghinaan Terhadap Warga" data-type="1" data-denda="10000" data-jail="5">
+                        <td>3</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.3</td>
+                        <td>Penghinaan Terhadap Warga</td>
+                        <td>5</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="4" data-name="Mengganggu ketertiban Umum / Provokator" data-type="1" data-denda="5000" data-jail="5">
+                        <td>4</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.4</td>
+                        <td>Mengganggu ketertiban Umum / Provokator</td>
+                        <td>5</td>
+                        <td>5000</td>
+                    </tr>
+                                    <tr data-id="5" data-name="Membawa Minuman Beralkohol" data-type="1" data-denda="2500" data-jail="5">
+                        <td>5</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.5</td>
+                        <td>Membawa Minuman Beralkohol</td>
+                        <td>5</td>
+                        <td>2500</td>
+                    </tr>
+                                    <tr data-id="6" data-name="Telanjang / Memakai Topeng di area public" data-type="1" data-denda="10000" data-jail="5">
+                        <td>6</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.6</td>
+                        <td>Telanjang / Memakai Topeng di area public</td>
+                        <td>5</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="7" data-name="Penipuan / Memberikan informasi palsu" data-type="1" data-denda="20000" data-jail="5">
+                        <td>7</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.7</td>
+                        <td>Penipuan / Memberikan informasi palsu</td>
+                        <td>5</td>
+                        <td>20000</td>
+                    </tr>
+                                    <tr data-id="8" data-name="Mabuk di area publik / Mabuk saat mengemudi" data-type="1" data-denda="25000" data-jail="5">
+                        <td>8</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.8</td>
+                        <td>Mabuk di area publik / Mabuk saat mengemudi</td>
+                        <td>5</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="9" data-name="Pencemaran Nama Baik / Perbuatan tidak menyenangkan" data-type="1" data-denda="10000" data-jail="5">
+                        <td>9</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.9</td>
+                        <td>Pencemaran Nama Baik / Perbuatan tidak menyenangkan</td>
+                        <td>5</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="10" data-name="Mencuru / Merusak kendaraan" data-type="1" data-denda="20000" data-jail="5">
+                        <td>10</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.10</td>
+                        <td>Mencuru / Merusak kendaraan</td>
+                        <td>5</td>
+                        <td>20000</td>
+                    </tr>
+                                    <tr data-id="11" data-name="Perjudian / Taruhan" data-type="1" data-denda="15000" data-jail="5">
+                        <td>11</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.11</td>
+                        <td>Perjudian / Taruhan</td>
+                        <td>5</td>
+                        <td>15000</td>
+                    </tr>
+                                    <tr data-id="12" data-name="Pembobolan / Pencurian Rumah" data-type="1" data-denda="50000" data-jail="10">
+                        <td>12</td>
+                        <td style="background-color:yellow">Ringan                        </td>
+                        <td>1.12</td>
+                        <td>Pembobolan / Pencurian Rumah</td>
+                        <td>10</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="13" data-name="Upaya Korupsi / Melawan Petugas / Menghilangkan Barang Bukti" data-type="2" data-denda="25000" data-jail="10">
+                        <td>13</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.1</td>
+                        <td>Upaya Korupsi / Melawan Petugas / Menghilangkan Barang Bukti</td>
+                        <td>10</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="14" data-name="Penyalahgunaan Atribut Kepolisian" data-type="2" data-denda="50000" data-jail="20">
+                        <td>14</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.2</td>
+                        <td>Penyalahgunaan Atribut Kepolisian</td>
+                        <td>20</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="15" data-name="Berada di zona Merah / Zona Terlarang" data-type="2" data-denda="10000" data-jail="5">
+                        <td>15</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.3</td>
+                        <td>Berada di zona Merah / Zona Terlarang</td>
+                        <td>5</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="16" data-name="Kepemilikan barang ilegal ringan <50" data-type="2" data-denda="10000" data-jail="5">
+                        <td>16</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.4</td>
+                        <td>Kepemilikan barang ilegal ringan <50</td>
+                        <td>5</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="17" data-name="Kepemilikan barang ilegal ringan 50 - 168" data-type="2" data-denda="25000" data-jail="5">
+                        <td>17</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.5</td>
+                        <td>Kepemilikan barang ilegal ringan 50 - 168</td>
+                        <td>5</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="18" data-name="kepemilikan barang ilegal ringan > 168" data-type="2" data-denda="50000" data-jail="10">
+                        <td>18</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.6</td>
+                        <td>kepemilikan barang ilegal ringan > 168</td>
+                        <td>10</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="19" data-name="kepemilikan barang ilegal berat < 14" data-type="2" data-denda="50000" data-jail="5">
+                        <td>19</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.7</td>
+                        <td>kepemilikan barang ilegal berat < 14</td>
+                        <td>5</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="20" data-name="kepemilikan barang ilegal berat 14 - 70" data-type="2" data-denda="75000" data-jail="8">
+                        <td>20</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.8</td>
+                        <td>kepemilikan barang ilegal berat 14 - 70</td>
+                        <td>8</td>
+                        <td>75000</td>
+                    </tr>
+                                    <tr data-id="21" data-name="kepemilikan barang ilegal berat > 70" data-type="2" data-denda="100000" data-jail="10">
+                        <td>21</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.9</td>
+                        <td>kepemilikan barang ilegal berat > 70</td>
+                        <td>10</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="22" data-name="kepemilikan uang kotor < 500.000" data-type="2" data-denda="25000" data-jail="5">
+                        <td>22</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.10</td>
+                        <td>kepemilikan uang kotor < 500.000</td>
+                        <td>5</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="23" data-name="kepemilikan uang kotor 500000 - 1000000" data-type="2" data-denda="50000" data-jail="8">
+                        <td>23</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.11</td>
+                        <td>kepemilikan uang kotor 500000 - 1000000</td>
+                        <td>8</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="24" data-name="kepemilikan uang kotor > 1000000" data-type="2" data-denda="100000" data-jail="10">
+                        <td>24</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.12</td>
+                        <td>kepemilikan uang kotor > 1000000</td>
+                        <td>10</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="25" data-name="Penyalahgunaan barang ilegal" data-type="2" data-denda="25000" data-jail="15">
+                        <td>25</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.13</td>
+                        <td>Penyalahgunaan barang ilegal</td>
+                        <td>15</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="26" data-name="Tidak memiliki lisensi senjata" data-type="2" data-denda="25000" data-jail="5">
+                        <td>26</td>
+                        <td style="background-color:#f7771d">Sedang                        </td>
+                        <td>2.14</td>
+                        <td>Tidak memiliki lisensi senjata</td>
+                        <td>5</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="27" data-name="Upaya pembunuhan terhadap warga" data-type="3" data-denda="15000" data-jail="5">
+                        <td>27</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.1</td>
+                        <td>Upaya pembunuhan terhadap warga</td>
+                        <td>5</td>
+                        <td>15000</td>
+                    </tr>
+                                    <tr data-id="28" data-name="Jual beli barang / senjata illegal" data-type="3" data-denda="50000" data-jail="30">
+                        <td>28</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.2</td>
+                        <td>Jual beli barang / senjata illegal</td>
+                        <td>30</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="29" data-name="pembunuhan terhadap warga" data-type="3" data-denda="100000" data-jail="25">
+                        <td>29</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.3</td>
+                        <td>pembunuhan terhadap warga</td>
+                        <td>25</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="30" data-name="penodongan / pembegalan terhadap warga" data-type="3" data-denda="5000" data-jail="10">
+                        <td>30</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.4</td>
+                        <td>penodongan / pembegalan terhadap warga</td>
+                        <td>10</td>
+                        <td>5000</td>
+                    </tr>
+                                    <tr data-id="31" data-name="penodongan / pembegalan terhadap petugas" data-type="3" data-denda="10000" data-jail="10">
+                        <td>31</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.5</td>
+                        <td>penodongan / pembegalan terhadap petugas</td>
+                        <td>10</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="32" data-name="kepemilikan senjata ilegal" data-type="3" data-denda="50000" data-jail="5">
+                        <td>32</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.6</td>
+                        <td>kepemilikan senjata ilegal</td>
+                        <td>5</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="33" data-name="penyanderaan / penculikan warga" data-type="3" data-denda="100000" data-jail="15">
+                        <td>33</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.7</td>
+                        <td>penyanderaan / penculikan warga</td>
+                        <td>15</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="34" data-name="kejahatan tidak disengaja" data-type="3" data-denda="25000" data-jail="5">
+                        <td>34</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.8</td>
+                        <td>kejahatan tidak disengaja</td>
+                        <td>5</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="35" data-name="penembakan terhadap warga" data-type="3" data-denda="50000" data-jail="10">
+                        <td>35</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.9</td>
+                        <td>penembakan terhadap warga</td>
+                        <td>10</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="36" data-name="penembakan terhadap petugas" data-type="3" data-denda="100000" data-jail="10">
+                        <td>36</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.10</td>
+                        <td>penembakan terhadap petugas</td>
+                        <td>10</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="37" data-name="perampokan di warung" data-type="3" data-denda="75000" data-jail="10">
+                        <td>37</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.11</td>
+                        <td>perampokan di warung</td>
+                        <td>10</td>
+                        <td>75000</td>
+                    </tr>
+                                    <tr data-id="38" data-name="perampokan di bank / jewelry" data-type="3" data-denda="100000" data-jail="15">
+                        <td>38</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.12</td>
+                        <td>perampokan di bank / jewelry</td>
+                        <td>15</td>
+                        <td>100000</td>
+                    </tr>
+                                    <tr data-id="39" data-name="pembocoran informasi / rahasia negara" data-type="3" data-denda="150000" data-jail="30">
+                        <td>39</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.13</td>
+                        <td>pembocoran informasi / rahasia negara</td>
+                        <td>30</td>
+                        <td>150000</td>
+                    </tr>
+                                    <tr data-id="40" data-name="kepemilikan senjata negara" data-type="3" data-denda="500000" data-jail="15">
+                        <td>40</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.14</td>
+                        <td>kepemilikan senjata negara</td>
+                        <td>15</td>
+                        <td>500000</td>
+                    </tr>
+                                    <tr data-id="41" data-name="penyalahgunaan teknologi" data-type="3" data-denda="50000" data-jail="20">
+                        <td>41</td>
+                        <td style="background-color:red">Berat                        </td>
+                        <td>3.15</td>
+                        <td>penyalahgunaan teknologi</td>
+                        <td>20</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="42" data-name="Tidak melengkapi Atribut Berkendara" data-type="4" data-denda="10000" data-jail="0">
+                        <td>42</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.1</td>
+                        <td>Tidak melengkapi Atribut Berkendara</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="43" data-name="Berkendara Tidak sesuai medan" data-type="4" data-denda="25000" data-jail="0">
+                        <td>43</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.2</td>
+                        <td>Berkendara Tidak sesuai medan</td>
+                        <td>0</td>
+                        <td>25000</td>
+                    </tr>
+                                    <tr data-id="44" data-name="Memodifikasi Kendaraan tidak sesuai" data-type="4" data-denda="50000" data-jail="0">
+                        <td>44</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.3</td>
+                        <td>Memodifikasi Kendaraan tidak sesuai</td>
+                        <td>0</td>
+                        <td>50000</td>
+                    </tr>
+                                    <tr data-id="45" data-name="Parkir Ilegal / Trotoar" data-type="4" data-denda="5000" data-jail="0">
+                        <td>45</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.4</td>
+                        <td>Parkir Ilegal / Trotoar</td>
+                        <td>0</td>
+                        <td>5000</td>
+                    </tr>
+                                    <tr data-id="46" data-name="Ugal Ugalan Saat Berkendara" data-type="4" data-denda="10000" data-jail="0">
+                        <td>46</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.5</td>
+                        <td>Ugal Ugalan Saat Berkendara</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="47" data-name="Menghambat Arus Lalu Lintas" data-type="4" data-denda="10000" data-jail="0">
+                        <td>47</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.6</td>
+                        <td>Menghambat Arus Lalu Lintas</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="48" data-name="Tidak mematuhi Rambu Lalu Lintas" data-type="4" data-denda="10000" data-jail="0">
+                        <td>48</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.7</td>
+                        <td>Tidak mematuhi Rambu Lalu Lintas</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="49" data-name="Mengemudi Tanpa Sim" data-type="4" data-denda="10000" data-jail="0">
+                        <td>49</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.8</td>
+                        <td>Mengemudi Tanpa Sim</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="50" data-name="Tidak Memiliki STNK/BPKB" data-type="4" data-denda="10000" data-jail="0">
+                        <td>50</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.9</td>
+                        <td>Tidak Memiliki STNK/BPKB</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="51" data-name="Mabuk Saat Mengemudi" data-type="4" data-denda="15000" data-jail="5">
+                        <td>51</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>1.8</td>
+                        <td>Mabuk Saat Mengemudi</td>
+                        <td>5</td>
+                        <td>15000</td>
+                    </tr>
+                                    <tr data-id="52" data-name="Melebihi Kecepatan Berkendara di area Perumahan (80KMH)" data-type="4" data-denda="5000" data-jail="0">
+                        <td>52</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.10</td>
+                        <td>Melebihi Kecepatan Berkendara di area Perumahan (80KMH)</td>
+                        <td>0</td>
+                        <td>5000</td>
+                    </tr>
+                                    <tr data-id="53" data-name="Melebihi Kecepatan Berkendara di area Perumahan (150KMH)" data-type="4" data-denda="10000" data-jail="0">
+                        <td>53</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.11</td>
+                        <td>Melebihi Kecepatan Berkendara di area Perumahan (150KMH)</td>
+                        <td>0</td>
+                        <td>10000</td>
+                    </tr>
+                                    <tr data-id="54" data-name="Melebihi Kecepatan Berkendara di area Tol (200KMH)" data-type="4" data-denda="15000" data-jail="0">
+                        <td>54</td>
+                        <td style="background-color:blue">Lalu-Lintas                        </td>
+                        <td>4.12</td>
+                        <td>Melebihi Kecepatan Berkendara di area Tol (200KMH)</td>
+                        <td>0</td>
+                        <td>15000</td>
+                    </tr>
+                                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="result-container">
+        <div id="result-details">
+            <div id="selectedRow" class="left"></div>
+            <div class="checkbox-container">
+                <label for="kooperatif" class="checkbox-label">
+                    <input type="checkbox" id="kooperatif" value="(KOOPERATIF)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Kooperatif
+                </label>
+                <label for="tidak_kooperatif" class="checkbox-label">
+                    <input type="checkbox" id="tidak_kooperatif" value="(TIDAK KOOPERATIF)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Tidak Kooperatif
+                </label>
+                <label for="dpo" class="checkbox-label">
+                    <input type="checkbox" id="dpo" value="(DPO)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    DPO
+                </label>
+                <label for="tahanan_federal" class="checkbox-label">
+                    <input type="checkbox" id="tahanan_federal" value="(Tahanan Federal)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Tahanan Federal
+                </label>
+                <label for="rehabilitasi" class="checkbox-label">
+                    <input type="checkbox" id="rehabilitasi" value="(Rehabilitasi)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Rehabilitasi
+                </label>
+                <label for="pengedar" class="checkbox-label">
+                    <input type="checkbox" id="pengedar" value="(Pengedar)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Pengedar
+                </label>
+                <label for="simulasi" class="checkbox-label">
+                    <input type="checkbox" id="simulasi" value="(SIMULASI)" onchange="updateSummary()">
+                    <img src="https://e7.pngegg.com/pngimages/716/420/png-clipart-checkbox-rectangle-square-computer-icons-checkboxes-angle-check-mark-thumbnail.png" alt="Checkbox Icon">
+                    Simulasi
+                </label>
+                <!-- Tambahkan label-checkbox lainnya di sini -->
+            </div>
+            <div class="center">
+                <button onclick="clearSelection()" id="clearButton">Clear</button>
+                <button onclick="copyToClipboard()" id="copyButton">Copy to Clipboard</button>
+            </div>
+        </div>
+        <button id="myBtn" onclick="topFunction()" title="Go to top">Back To Top</button>
+    </div>
+
+
+
+
+</div>
+
+<!-- Tambahkan script JavaScript DataTables di sini -->
+<script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+<script>
+var copiedTexts = [];
+var selectedTexts = [];
+var selectedDenda = 0;
+var selectedJail = 0;
+
+// Fungsi untuk menampilkan konten setelah loading
+function showContent() {
+    $('#loading-overlay').fadeOut();
+    $('#container').fadeIn();
+}
+
+$(document).ready( function () {
+    var table = $('#example').DataTable({
+        "pageLength": 100,
+        "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "All"]],
+        "initComplete": function(settings, json) {
+            // Panggil fungsi showContent() setelah 2 detik
+            setTimeout(showContent, 2000);
+        }
+    });
+
+    $('#example tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+        updateSummary();
+    });
+} );
+
+function clearSelection() {
+    selectedTexts = [];
+    selectedDenda = 0;
+    selectedJail = 0;
+    updateSummary();
+    $('#example tbody tr').removeClass('selected');
+}
+
+function updateSummary() {
+    selectedTexts = [];
+    selectedJail = 0;
+    var maxDenda = 0;
+    var pelanggaran = ""; // Inisialisasi variabel pelanggaran
+
+    $('#example tbody tr.selected').each(function() {
+        var rowData = $(this).find('td');
+        var pelanggaranData = rowData.eq(3).text().toUpperCase();
+        var denda = parseFloat(rowData.eq(5).text());
+        var jail = parseFloat(rowData.eq(4).text());
+
+        selectedTexts.push(pelanggaranData);
+        selectedJail += jail;
+
+        if (denda > maxDenda) {
+            maxDenda = denda;
+        }
+    });
+
+    var summary = selectedTexts.join(", ");
+
+    // Tambahkan nilai string dari checkbox yang dipilih ke dalam variabel pelanggaran
+    if ($('#kooperatif').is(':checked')) {
+        summary += " , " + $('#kooperatif').val();
+    }
+    if ($('#tidak_kooperatif').is(':checked')) {
+        summary += " , " + $('#tidak_kooperatif').val();
+    }
+    if ($('#dpo').is(':checked')) {
+        summary += " , " + $('#dpo').val();
+    }
+    if ($('#tahanan_federal').is(':checked')) {
+        summary += " , " + $('#tahanan_federal').val();
+    }
+    if ($('#rehabilitasi').is(':checked')) {
+        summary += " , " + $('#rehabilitasi').val();
+    }
+    if ($('#pengedar').is(':checked')) {
+        summary += " , " + $('#pengedar').val();
+    }
+    if ($('#simulasi').is(':checked')) {
+        summary += " , " + $('#simulasi').val();
+    }
+
+    selectedTexts.push(summary);
+    copiedTexts = summary;
+
+    var totalSummary = "<p><strong>Pelanggaran:</strong><br><textarea style='width: 85%; min-height: 300px; max-height: 500px; resize: vertical; border: 1px solid #ccc; border-radius: 5px; padding: 8px; font-size: 16px; font-family: Arial, sans-serif;' rows='4'>" + summary + "</textarea></p>";
+
+
+    if (maxDenda > 0) {
+        totalSummary += "<p><strong>Denda:</strong> $ " + maxDenda.toFixed(0) + "</p>";
+    }
+
+    totalSummary += "<p><strong>Hukuman Penjara:</strong> " + selectedJail.toFixed(0) + " Bulan </p>";
+
+    $('#selectedRow').html(totalSummary);
+}
+
+function topFunction() {
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+
+function copyToClipboard() {
+
+    navigator.clipboard.writeText(copiedTexts)
+        .then(() => {
+            alert('Text copied to clipboard');
+        })
+        .catch(err => {
+            console.error('Could not copy text: ', err);
+        });
+}
+</script>
+
+</body>
+</html>
