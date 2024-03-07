@@ -1,1 +1,1 @@
-PASAL PROSES SUSPECT (https://pr4ns.github.io/)
+CEK DI -> [PASAL PROSES SUSPECT](https://pr4ns.github.io/)
